@@ -3,6 +3,13 @@ from django.db import models
 # Create your models here.
 from django.db import models
 
+class Bookmanage(models.Manager):
+    def all(self):
+        return self.filter(is_delete=False).all()
+
+    def show_hero(self,btitle):
+        return self.get(btitle=btitle).heroinfo_set.all()
+
 # Create your models here.
 class BookInfo(models.Model):
     """图书信息模型类"""
@@ -12,7 +19,7 @@ class BookInfo(models.Model):
     bread = models.IntegerField(default=0, verbose_name='阅读量')
     bcomment = models.IntegerField(default=0, verbose_name='评论量')
     is_delete = models.BooleanField(default=False, verbose_name='逻辑删除')
-
+    image = models.ImageField(upload_to='bookface', verbose_name='图书', null=True)
     # 2. 表的信息设置
     # 默认设置表名：books_bookinfo
     class Meta:
@@ -24,6 +31,15 @@ class BookInfo(models.Model):
     def __str__(self):
         # 开发过程中，经常会打印模型对象，我们可以设置一些打印的文本
         return self.btitle
+
+    def pub_date(self):
+        return self.bpub_date.strftime('%Y年%m月%d日')
+
+    pub_date.short_description = '发布日期'
+    pub_date.admin_order_field = 'bpub_date'
+
+    objs=Bookmanage()
+    objects=models.Manager()
 
 class HeroInfo(models.Model):
     """图书英雄模型类"""
@@ -41,6 +57,8 @@ class HeroInfo(models.Model):
     # 在数据表中，BooleanField字段类型会转换成 0-1
     is_delete = models.BooleanField(default=False, verbose_name='逻辑删除')
 
+    image=models.ImageField(upload_to='books', verbose_name='英雄头像', null=True)
+
     class Meta:
         db_table = 'tb_heros'
         verbose_name = '英雄'
@@ -48,3 +66,9 @@ class HeroInfo(models.Model):
 
     def __str__(self):
         return self.hname
+
+    def read(self):
+        return self.hbook.bcomment
+
+    read.short_description = '图书评论量'
+    read.admin_order_field = 'hbook.bcomment'
